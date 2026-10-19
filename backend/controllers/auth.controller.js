@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../models/User.js";
 import { randomUUID } from "crypto";
 import jwt from 'jsonwebtoken';
 
@@ -8,7 +8,7 @@ export async function signup(req, res) {
         if (!email || !password || !fullName) {
             return res.status(400).json({ message: "All fields are required" });
         }
-        if (passworrd.length < 6) {
+        if (password.length < 6) {
             return res.status(400).json({ message: "Password must be at least " })
         }
 
@@ -25,10 +25,10 @@ export async function signup(req, res) {
 
         const avatarSeed = randomUUID();
 
-        const newUser = new User.create({
+        const newUser = await User.create({
             fullName,
             email,
-            passwords,
+            password,
             profilePic: `https://api.dicebear.com/10.x/avataaars/svg?seed=${avatarSeed}`,
         })
 
