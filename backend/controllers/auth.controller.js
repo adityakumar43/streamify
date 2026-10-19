@@ -1,4 +1,6 @@
 import User from "../models/User";
+import { randomUUID } from "crypto";
+import jwt from 'jsonwebtoken';
 
 export async function signup(req, res) {
     const { email, password, fullName } = req.body;
@@ -16,11 +18,37 @@ export async function signup(req, res) {
             return res.status(400).json({ message: "Invalid email format" });
         }
 
-        const existingUser = await User.findOne({email});
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already exists, please use a different one" });
+        }
 
-        
+        const avatarSeed = randomUUID();
+
+        const newUser = new User.create({
+            fullName,
+            email,
+            passwords,
+            profilePic: `https://api.dicebear.com/10.x/avataaars/svg?seed=${avatarSeed}`,
+        })
+
+        //todo: create the user in stream as well
+
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET_KEY, {
+            expiresIn: "7d"
+        })
+
+        res.cookie("jwt", token, {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,  //prevents excess attacks
+            sameSite: "strict",  //prevent CSRF attacks
+            secure: process.env.NODE_ENV === 'production'
+        })
+
+        res.status(201).json({ success: true, user: newUser })
 
     } catch (error) {
-
+        console.log("Error in signup controller", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 }
