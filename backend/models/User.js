@@ -2,41 +2,41 @@ import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-    fullName:{
+    fullName: {
         type: String,
         required: true,
     },
-    email:{
+    email: {
         type: String,
         required: true,
         unique: true,
     },
-    password:{
+    password: {
         type: String,
         required: true,
         minlength: 6
     },
-    bio:{
+    bio: {
         type: String,
         default: "",
     },
-    profilePic:{
+    profilePic: {
         type: String,
         default: "",
     },
-    nativeLanguage:{
+    nativeLanguage: {
         type: String,
         default: "",
     },
-    learningLanguage:{
+    learningLanguage: {
         type: String,
         default: "",
     },
-    location:{
+    location: {
         type: String,
         default: "",
     },
-    isOnboarded:{
+    isOnboarded: {
         type: Boolean,
         default: false,
     },
@@ -46,21 +46,21 @@ const userSchema = new mongoose.Schema({
             ref: "User",
         }
     ]
-}, {timestamps:true});
+}, { timestamps: true });
+
+//pre hook
+// Hash password before saving
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
 
 const User = mongoose.model("User", userSchema);
 
-//pre hook
-userSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
-})
+
 
 
 export default User;
